@@ -10,3 +10,4 @@ models/oof_*.csv
 
 # Raw source data (33 MB): downloaded by notebooks/get data.ipynb or src/rank_features.py
 inputs/rolled_player_data_24-25.csv
+inputs/rolled_player_data_24-25_xp_fixed.csv  # rebuilt by src/fix_missing_xp.py
