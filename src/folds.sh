@@ -1,5 +1,5 @@
 # Create the fold files, then train every model for every fold and position.
-# Folds come from config.py (VALID_FOLDS, then TEST_FOLDS). Models come from model_dispatcher.
+# Folds are the selection points in config.VALID_FOLDS. Models come from model_dispatcher.
 #
 # Usage:
 #   bash folds.sh                 # every model
@@ -8,7 +8,7 @@ set -e
 cd "$(dirname "$0")"
 
 POSITIONS=$(python -c "import config; print(*config.POSITIONS)")
-FOLDS=$(python -c "import config; print(*config.VALID_FOLDS, *config.TEST_FOLDS)")
+FOLDS=$(python -c "import config; print(*config.VALID_FOLDS)")
 ALL_MODELS=$(python -c "import model_dispatcher as md; print(*md.models_gk)")
 MODELS=${*:-$ALL_MODELS}
 

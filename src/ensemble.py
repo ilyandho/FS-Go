@@ -25,9 +25,8 @@ from sklearn import metrics
 from sklearn.base import clone
 
 import config
+import data
 import model_dispatcher
-
-DROP_COLS = ["kfold", "fpl_id", "round", "xP"]
 
 
 class EnsembleRegressor:
@@ -52,7 +51,7 @@ class EnsembleRegressor:
 
 
 def split_xy(df):
-    return df.drop(columns=DROP_COLS), df.xP
+    return data.features(df), df.xP
 
 
 MODELS_BY_POSITION = model_dispatcher.MODELS_BY_POSITION
@@ -65,15 +64,19 @@ def fit_models(pos, names, x, y):
 
 
 def inner_holdout_preds(pos, names, df_train, inner):
-    """Fit on training data before the last `inner` gameweeks and predict those gameweeks."""
-    cutoff = df_train.kfold.max() - inner + 1
-    df_fit = df_train[df_train.kfold < cutoff]
-    df_hold = df_train[df_train.kfold >= cutoff]
-    if df_fit.empty or df_hold.empty:
+    """Fit on training data before the last `inner` gameweeks and predict those gameweeks.
+
+    Counts the gameweeks present in df_train, so dropped gameweeks (no target) are skipped over.
+    """
+    gws = sorted(df_train.kfold.unique())
+    if len(gws) <= inner:
         raise ValueError(
             f"Not enough gameweeks before this fold for --inner {inner}; "
             "use a smaller --inner or a later fold."
         )
+    cutoff = gws[-inner]
+    df_fit = df_train[df_train.kfold < cutoff]
+    df_hold = df_train[df_train.kfold >= cutoff]
 
     x_fit, y_fit = split_xy(df_fit)
     x_hold, y_hold = split_xy(df_hold)
@@ -95,15 +98,15 @@ def stack_weights(pos, names, df_train, inner):
 def top_k_weights(pos, names, df_train, inner, k):
     """Equal weights on the k models with the lowest MAE on the last `inner` gameweeks."""
     preds, y_hold = inner_holdout_preds(pos, names, df_train, inner)
-    mae = {n: metrics.mean_absolute_error(y_hold, preds[:, i]) for i, n in enumerate(names)}
+    mae = {
+        n: metrics.mean_absolute_error(y_hold, preds[:, i]) for i, n in enumerate(names)
+    }
     top = sorted(names, key=mae.get)[:k]
     return {n: (1 / len(top) if n in top else 0.0) for n in names}
 
 
 def run(fold, pos, names, method, inner, top_k=3, name=None):
-    training_file = getattr(config, f"{pos.upper()}_TRAINING_FILE")
-    df = pd.read_csv(training_file)
-    df["row"] = df.index
+    df = data.load(pos.upper())  # without the gameweeks that have no target
 
     # Time-based split, identical to train.py
     df_train = df[df.kfold < fold].reset_index(drop=True)
@@ -139,8 +142,8 @@ def run(fold, pos, names, method, inner, top_k=3, name=None):
         else ";".join(f"{k}={v:.3f}" for k, v in weights.items()),
     }
     # Per-base-model MAE on the same fold, for a direct comparison
-    for name in names:
-        row[f"mae_{name}"] = metrics.mean_absolute_error(y_valid, base_preds[name])
+    for base in names:
+        row[f"mae_{base}"] = metrics.mean_absolute_error(y_valid, base_preds[base])
 
     path = f"{config.MODEL_OUTPUT}ensemble_results.csv"
     # Rewrite rather than append: runs with different base models add different mae_* columns
@@ -183,7 +186,9 @@ if __name__ == "__main__":
         default=None,
         help="Base models to combine (default: every model of the position except dummy)",
     )
-    parser.add_argument("--method", choices=["mean", "median", "stack", "top"], default="mean")
+    parser.add_argument(
+        "--method", choices=["mean", "median", "stack", "top"], default="mean"
+    )
     parser.add_argument(
         "--inner",
         type=int,
@@ -217,4 +222,6 @@ if __name__ == "__main__":
     # rather than __main__.EnsembleRegressor, and can be loaded from other scripts and notebooks.
     import ensemble
 
-    ensemble.run(args.fold, args.pos, models, args.method, args.inner, args.top_k, args.name)
+    ensemble.run(
+        args.fold, args.pos, models, args.method, args.inner, args.top_k, args.name
+    )

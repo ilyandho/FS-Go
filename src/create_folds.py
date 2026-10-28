@@ -12,7 +12,9 @@ import pandas as pd
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--pos", type=str, required=True, help="Position: GK, DEF, MID or FWD")
+    parser.add_argument(
+        "--pos", type=str, required=True, help="Position: GK, DEF, MID or FWD"
+    )
     args = parser.parse_args()
     pos = args.pos.lower()
 

@@ -1,4 +1,4 @@
-"""Train one base model for one position and fold, and record its validation scores.
+"""Train one base model for one position at one selection point (fold) and record its validation scores.
 
 Writes to ../models/:
   {POS}_results.csv         one row per run (appended)
@@ -16,22 +16,20 @@ import pandas as pd
 from sklearn import metrics
 
 import config
+import data
 import model_dispatcher
-
-DROP_COLS = ["kfold", "fpl_id", "round", "xP"]
 
 
 def run(fold, model, pos):
-    df = pd.read_csv(getattr(config, f"{pos}_TRAINING_FILE"))
-    df["row"] = df.index
+    df = data.load(pos)  # without the gameweeks that have no target
 
     # Time-based split: train on every gameweek before the fold, validate on the fold
     df_train = df[df.kfold < fold].reset_index(drop=True)
     df_valid = df[df.kfold == fold].reset_index(drop=True)
 
-    x_train = df_train.drop(columns=DROP_COLS + ["row"])
+    x_train = data.features(df_train)
     y_train = df_train.xP
-    x_valid = df_valid.drop(columns=DROP_COLS + ["row"])
+    x_valid = data.features(df_valid)
     y_valid = df_valid.xP
 
     reg = model_dispatcher.MODELS_BY_POSITION[pos][model]
@@ -41,11 +39,15 @@ def run(fold, model, pos):
     mae = metrics.mean_absolute_error(y_valid, preds)
     r2 = metrics.r2_score(y_valid, preds)
 
-    row = pd.DataFrame([{"pos": pos, "model": model, "fold": fold, "mae": mae, "r2": r2}])
+    row = pd.DataFrame(
+        [{"pos": pos, "model": model, "fold": fold, "mae": mae, "r2": r2}]
+    )
     path = f"{config.MODEL_OUTPUT}{pos}_results.csv"
     row.to_csv(path, mode="a", header=not os.path.exists(path), index=False)
 
-    oof = pd.DataFrame({"row": df_valid["row"], "fold": fold, "y": y_valid, "pred": preds})
+    oof = pd.DataFrame(
+        {"row": df_valid["row"], "fold": fold, "y": y_valid, "pred": preds}
+    )
     oof.to_csv(f"{config.MODEL_OUTPUT}oof_{model}_{pos}_{fold}.csv", index=False)
     joblib.dump(reg, f"{config.MODEL_OUTPUT}{model}_{pos}_{fold}.pkl")
 
@@ -54,10 +56,18 @@ def run(fold, model, pos):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--fold", type=int, required=True, help="Fold (gameweek) to validate on")
-    parser.add_argument("--model", type=str, required=True, help="Model name from model_dispatcher")
     parser.add_argument(
-        "--pos", type=str.upper, required=True, choices=config.POSITIONS, help="Position"
+        "--fold", type=int, required=True, help="Fold (gameweek) to validate on"
+    )
+    parser.add_argument(
+        "--model", type=str, required=True, help="Model name from model_dispatcher"
+    )
+    parser.add_argument(
+        "--pos",
+        type=str.upper,
+        required=True,
+        choices=config.POSITIONS,
+        help="Position",
     )
     args = parser.parse_args()
     if args.model not in model_dispatcher.MODELS_BY_POSITION[args.pos]:

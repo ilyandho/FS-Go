@@ -3,8 +3,16 @@
 POSITIONS = ["GK", "DEF", "MID", "FWD"]
 
 # Folds are gameweeks. Each fold trains on every gameweek before it and validates on that gameweek.
-VALID_FOLDS = [21, 26, 31, 36]  # used to compare models and choose ensembles
-TEST_FOLDS = [37, 38]  # held out: only used to report the final scores
+# VALID_FOLDS are the model selection points: at gameweek 21, train on gameweeks 1-20, validate on 21,
+# and use the selected model for the next HORIZON gameweeks (22-26). Then repeat the selection at 26, 31
+# and 36. The last window is cut short by the end of the season (37-38).
+VALID_FOLDS = [21, 26, 31, 36]
+HORIZON = 5
+
+# Gameweeks with no target: the source data has xP = 0 for every player in them. They are left out of
+# training and of every score (data.load). predictor.py still predicts them.
+MISSING_TARGET_GWS = [22, 32, 34]
+assert not set(MISSING_TARGET_GWS) & set(VALID_FOLDS), "a selection point has no target"
 
 GK_TRAINING_FILE = "../inputs/gk_train_folds.csv"
 DEF_TRAINING_FILE = "../inputs/def_train_folds.csv"
