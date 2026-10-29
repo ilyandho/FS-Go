@@ -46,6 +46,7 @@ def tree_prep(num_cols, cat_cols):
 
 
 ## FEATS
+# Tackles (and cbitr, built from them) are not published for 2023-24, so they are not used
 cat_cols = [
     "team",
     "opponent_team",
@@ -78,8 +79,6 @@ num_cols_gk = [
     "influence_rolling_3",
     "creativity_rolling_3",
     "threat_rolling_3",
-    "cbitr_ewm_probability",
-    "tackles_rolling_3",
 ]  # numeric features
 
 num_cols_def = [
@@ -97,11 +96,11 @@ num_cols_def = [
     "transfers_in",
     "transfers_out",
     "xP_rolling_3",
+    "xGChain_rolling_3",
+    "xGBuildup_rolling_3",
     "expected_goals_rolling_3",
     "expected_assists_rolling_3",
     "expected_goal_involvements_rolling_3",
-    "xGChain_rolling_3",
-    "xGBuildup_rolling_3",
     "minutes_rolling_3",
     "starts_rolling_3",
     "expected_goals_conceded_rolling_3",
@@ -111,8 +110,6 @@ num_cols_def = [
     "influence_rolling_3",
     "creativity_rolling_3",
     "threat_rolling_3",
-    "cbitr_ewm_probability",
-    "tackles_rolling_3",
 ]  # numeric features
 
 num_cols_mid = [
@@ -130,11 +127,11 @@ num_cols_mid = [
     "transfers_in",
     "transfers_out",
     "xP_rolling_3",
+    "xGChain_rolling_3",
+    "xGBuildup_rolling_3",
     "expected_goals_rolling_3",
     "expected_assists_rolling_3",
     "expected_goal_involvements_rolling_3",
-    "xGChain_rolling_3",
-    "xGBuildup_rolling_3",
     "minutes_rolling_3",
     "starts_rolling_3",
     "ict_index_rolling_3",
@@ -142,8 +139,6 @@ num_cols_mid = [
     "threat_rolling_3",
     "creativity_rolling_3",
     "threat_rolling_3",
-    "cbitr_ewm_probability",
-    "tackles_rolling_3",
 ]  # numeric features
 
 num_cols_fwd = [
@@ -161,11 +156,11 @@ num_cols_fwd = [
     "transfers_in",
     "transfers_out",
     "xP_rolling_3",
+    "xGChain_rolling_3",
+    "xGBuildup_rolling_3",
     "expected_goals_rolling_3",
     "expected_assists_rolling_3",
     "expected_goal_involvements_rolling_3",
-    "xGChain_rolling_3",
-    "xGBuildup_rolling_3",
     "minutes_rolling_3",
     "starts_rolling_3",
     "ict_index_rolling_3",

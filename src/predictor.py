@@ -6,10 +6,14 @@ Gameweek 21 comes before the first window, so it is predicted by the model selec
 model was trained on gameweeks 1 to 20, but its gameweek 21 predictions were also used to select it,
 so those rows are flagged with in_selection = True.
 
+Every player with a fixture is predicted (config.ALL_PLAYERS_DATA_XP_FIXED), also those who then did
+not play, with the same features the models were trained on.
+
 Writes ../models/predictions.csv, one row per player and gameweek:
-  pos, round, fpl_id, name, team, selected_at, model, pred, xP, in_selection
+  pos, round, fpl_id, value, name, team, total_points, minutes, played, selected_at, model, pred, xP,
+  in_selection
 xP is the actual target, left empty for the gameweeks without one (config.MISSING_TARGET_GWS).
-name and team come from the raw data file, when it is present.
+The scores (report, performance.py) only count players who played, as in training and deploy.py.
 
 Run folds.sh, ensemble.sh and deploy.py first.
 
@@ -31,7 +35,7 @@ import deploy
 import ensemble  # noqa: F401  (EnsembleRegressor must be importable to load ensemble models)
 
 OUTPUT = f"{config.MODEL_OUTPUT}predictions.csv"
-RAW_DATA = "../inputs/rolled_player_data_24-25_xp_fixed.csv"
+RAW_DATA = config.ALL_PLAYERS_DATA_XP_FIXED
 
 
 # print(pd.read_csv(RAW_DATA)["value"])
@@ -44,8 +48,17 @@ def schedule(last_gw):
     return plan
 
 
+def load(pos):
+    """Every player of the position with a fixture, with the columns of the training file."""
+    cols = pd.read_csv(getattr(config, f"{pos}_TRAINING_FILE"), nrows=0).columns
+    df = pd.read_csv(RAW_DATA, low_memory=False)
+    df = df[df["position"] == pos].reset_index(drop=True)
+    df["kfold"] = df["round"]
+    return df[[c for c in cols if c in df.columns]]
+
+
 def run(pos, results):
-    df = data.load(pos, drop_missing_target=False)  # predict every gameweek
+    df = load(pos)  # every player, every gameweek
     picks = compare.selections(results, pos)
     missing = set(config.MISSING_TARGET_GWS)
     out = []
@@ -83,11 +96,12 @@ def add_names(pred):
         return pred
     raw = pd.read_csv(
         RAW_DATA,
-        usecols=["fpl_id", "round", "name", "team", "value", "total_points"],
+        usecols=["fpl_id", "round", "name", "team", "value", "total_points", "minutes"],
         low_memory=False,
     )
     raw = raw.drop_duplicates(["fpl_id", "round"])
     named = pred.merge(raw, on=["fpl_id", "round"], how="left", validate="many_to_one")
+    named["played"] = named["minutes"] > 0
     cols = [
         "pos",
         "round",
@@ -96,6 +110,8 @@ def add_names(pred):
         "name",
         "team",
         "total_points",
+        "minutes",
+        "played",
         "selected_at",
         "model",
         "pred",
@@ -105,7 +121,7 @@ def add_names(pred):
 
 def report(pred):
     """MAE of the predictions on the gameweeks that have a target and were not used to select."""
-    scored = pred[pred.xP.notna() & ~pred.in_selection]
+    scored = pred[pred.xP.notna() & ~pred.in_selection & pred.played]
     by_gw = scored.groupby(["pos", "round"]).apply(
         lambda g: metrics.mean_absolute_error(g.xP, g.pred)
     )

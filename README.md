@@ -2,22 +2,25 @@
 
 Predicts a Fantasy Premier League player's expected points (`xP`) for the next gameweek, with a separate
 model for each position (GK, DEF, MID, FWD). Nine base models and two ensembles compete at four
-model selection points in the 2024-25 season, and each selected model is scored on the gameweeks it
+model selection points in one season (`config.SEASON`, now 2023-24), and each selected model is scored on the gameweeks it
 would have been used for.
 
 ## Layout
 
 ```
 inputs/                     data
-  rolled_player_data_24-25.csv   raw source (downloaded, not committed)
+  sources/                               downloads cached by src/build_rolled_data.py (not committed)
+  rolled_player_data_23-24.csv           2023-24 data in the 2024-25 column format (src/build_rolled_data.py)
+  rolled_player_data_23-24_xp_fixed.csv  same, with the xP features rebuilt (src/fix_missing_xp.py)
   fg_data_{pos}.csv              columns kept per position (notebooks/get data.ipynb)
   {pos}_train_folds.csv          same, plus the kfold column (src/create_folds.py)
 models/                     everything the pipeline writes (see "Outputs")
 notebooks/
-  get data.ipynb            downloads the raw data and writes fg_data_{pos}.csv
+  get data.ipynb            builds the raw data (first run) and writes fg_data_{pos}.csv
   model_comparison.ipynb    charts and tests comparing the models, and MAE and R² per gameweek
 src/
-  config.py                 positions, selection points, gameweeks without a target, paths
+  config.py                 season, positions, selection points, gameweeks without a target, paths
+  build_rolled_data.py      builds the 2023-24 raw data from vaastav, football-data and Understat
   data.py                   loads a position's fold file, without the gameweeks that have no target
   fix_missing_xp.py         writes a copy of the raw data with the xP rolling features rebuilt without them
   model_dispatcher.py       features and the nine base models per position
@@ -44,7 +47,7 @@ pip install -r requirements.txt
 ## Run
 
 ```
-# 1. Data: run notebooks/get data.ipynb (downloads about 33 MB the first time)
+# 1. Data: run notebooks/get data.ipynb (builds the 2023-24 data the first time, about a minute)
 
 # 2. Base models: create the folds and train every model at every selection point and position
 cd src
@@ -74,7 +77,9 @@ methods, and `TOP_K=4 BASE_MODELS="ridge svr cat" bash ensemble.sh` changes the 
 
 ## How models are evaluated
 
-A fold is a gameweek. Models are chosen at four **selection points: gameweeks 21, 26, 31 and 36**.
+A fold is a gameweek. Models are chosen at four **selection points: gameweeks 21, 26, 31 and 36**
+(2024-25; for 2023-24 they are 20, 25, 30 and 35, because gameweek 26 has no target). The steps below
+use the 2024-25 points.
 
 1. At gameweek 21, every model trains on gameweeks 1 to 20 and is validated on gameweek 21.
 2. The model with the lowest validation MAE is selected. The dummy baseline is never selected.
@@ -95,8 +100,8 @@ Two ensembles compete with the base models at each selection point:
 * `ens_top3`: the mean of the three base models with the lowest MAE on the three gameweeks before the
   selection point. It only uses information available at that point.
 
-Gameweeks 22, 32 and 34 have no target in the source data, so they are left out of training and of every
-score (see "Known issues"). The three gameweeks before a selection point are counted without them, so
+Gameweeks 22, 32 and 34 (2024-25) and 26 (2023-24) have no target in the source data, so they are left out
+of training and of every score (see "Known issues"). The three gameweeks before a selection point are counted without them, so
 before gameweek 36 they are 31, 33 and 35.
 
 `ensemble.py` also supports `median` and `stack` (non-negative weights fitted on the three gameweeks
@@ -152,9 +157,19 @@ The `.pkl` and `oof_*.csv` files are not committed. Rebuild them with steps 2 to
   leaves them out of training and of every score; `predictor.py` still predicts them. The rolling xP features
   of the gameweeks after them (`xP_rolling_3`) are computed in the source data and still include those
   zeros. `data.load` warns if the gameweeks with all-zero xP in the data differ from the config list.
-  `python fix_missing_xp.py` writes `inputs/rolled_player_data_24-25_xp_fixed.csv`, a copy where xP and
-  xP_25 are empty in those gameweeks and their rolling and ewm features skip them. It first checks that its
-  rebuild reproduces the source features exactly. `notebooks/get data.ipynb` reads
-  that file, so the models use the rebuilt features.
+  `python fix_missing_xp.py` writes `config.RAW_DATA_XP_FIXED`, a copy where xP (and xP_25 in 2024-25) is
+  empty in those gameweeks and their rolling and ewm features skip them. It first checks that its
+  rebuild reproduces the source features exactly. `notebooks/get data.ipynb` runs it and reads
+  that file, so the models use the rebuilt features. In 2023-24 the gameweek without xP is 26.
+* FPL-Optimal-Transfer's `rolled_data_23_24.csv` is a copy of the 2024-25 data, so
+  `build_rolled_data.py` rebuilds 2023-24 from public sources in the same format. Differences from 2024-25:
+  * no tackles or other defensive actions (FPL started publishing them in 2025-26), so `tackles_rolling_3`
+    and `cbitr_ewm_probability` are not in the feature lists;
+  * Elo is computed from the Premier League results of the five seasons before (ClubElo's API was
+    unavailable), so it is on a different scale from the 2024-25 Elo;
+  * `selected_by_percent` is estimated from `selected` (each manager owns 15 players);
+  * Understat players are matched to FPL players with FPL-Optimal-Transfer's id_dict, and the rest on
+    their appearances (same match, minutes within 15), ties broken by name.
+  The results above are from 2024-25, with tackles and cbitr.
 * `features.py` (from `rank_features.py`) holds a ranked feature list per position, but `model_dispatcher.py`
   does not use it yet.

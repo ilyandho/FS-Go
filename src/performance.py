@@ -9,6 +9,7 @@ Columns
   dummy_mae           MAE of the dummy baseline (mean of the training targets) on the same gameweek
   skill               1 - mae / dummy_mae: share of the baseline error removed
 
+Only players who played are scored, as in training and deploy.py.
 Gameweeks without a target (config.MISSING_TARGET_GWS) are listed with empty scores. Gameweek 21 is marked
 in_selection: its predictions were used to choose the model, so it is left out of the totals.
 
@@ -104,7 +105,9 @@ if __name__ == "__main__":
             sys.exit(f"No {path}. Run deploy.py and predictor.py first.")
 
     pd.set_option("display.width", 250)
-    table = per_gameweek(pd.read_csv(PREDICTIONS), pd.read_csv(DEPLOY))
+    pred = pd.read_csv(PREDICTIONS)
+    pred = pred[pred["played"]]  # scored like training and deploy.py: players who played
+    table = per_gameweek(pred, pd.read_csv(DEPLOY))
     table.to_csv(OUTPUT, index=False)
 
     shown = table[table.pos == args.pos] if args.pos else table

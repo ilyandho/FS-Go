@@ -1,10 +1,10 @@
 """Write a copy of the raw data with the xP rolling features rebuilt without the missing gameweeks.
 
 The source data has no xP for config.MISSING_TARGET_GWS (22, 32 and 34): every player has xP = 0
-there. Its lagged xP features (xP_rolling_k, xP_k_ewm and the same for xP_25) count those zeros as
+there. Its lagged xP features (xP_rolling_k, xP_k_ewm and the same for xP_25, when present) count those zeros as
 real scores, so they are too low for the gameweeks that follow. This script:
 
-1. sets xP and xP_25 to empty in the missing gameweeks,
+1. sets xP (and xP_25) to empty in the missing gameweeks,
 2. rebuilds the lagged features the way the source builds them, but with the missing gameweeks
    taken out of each player's timeline: the window before gameweek 23 is 19, 20 and 21.
 
@@ -14,22 +14,25 @@ How the source builds them (checked by --check, which reproduces the source valu
   * xP_rolling_k: mean of the last k gameweeks, 0 until k earlier gameweeks exist
   * xP_k_ewm: exponentially weighted mean with span k (adjust=False)
 
-Reads  ../inputs/rolled_player_data_24-25.csv
-Writes ../inputs/rolled_player_data_24-25_xp_fixed.csv (same rows and columns)
+Reads  config.RAW_DATA
+Writes config.RAW_DATA_XP_FIXED (same rows and columns)
+and, when config.ALL_PLAYERS_DATA exists, config.ALL_PLAYERS_DATA_XP_FIXED: the same fix for every
+player with a fixture, with the lagged features built from the main file as before
 
 Usage: python fix_missing_xp.py           # write the fixed file
        python fix_missing_xp.py --check   # only check the rebuild against the source values
 """
 
 import argparse
+import os
 
 import numpy as np
 import pandas as pd
 
 import config
 
-SOURCE = "../inputs/rolled_player_data_24-25.csv"
-OUTPUT = "../inputs/rolled_player_data_24-25_xp_fixed.csv"
+SOURCE = config.RAW_DATA
+OUTPUT = config.RAW_DATA_XP_FIXED
 STATS = [
     "xP",
     "xP_25",
@@ -63,16 +66,17 @@ def lagged_features(df, stat, skip_gws=()):
     return pd.concat({n: f.stack() for n, f in out.items()}, axis=1).reset_index()
 
 
-def rebuild(df, skip_gws):
-    """df with the lagged xP features recomputed, ignoring skip_gws."""
+def rebuild(df, skip_gws, history=None):
+    """df with the lagged xP features recomputed from history (default: df), ignoring skip_gws."""
+    history = df if history is None else history
     out = df.copy()
     for stat in STATS:
-        feats = lagged_features(df, stat, skip_gws)
+        feats = lagged_features(history, stat, skip_gws)
         cols = [c for c in feats.columns if c not in ("round", "fpl_id")]
         merged = out[["fpl_id", "round"]].merge(
             feats, on=["fpl_id", "round"], how="left", validate="many_to_one"
         )
-        out[cols] = merged[cols].to_numpy()
+        out[cols] = merged[cols].fillna(0.0).to_numpy()  # no history: not played yet
     return out
 
 
@@ -95,6 +99,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     df = pd.read_csv(SOURCE, low_memory=False)
+    STATS = [s for s in STATS if s in df.columns]  # 2023-24 has no xP_25
     worst = check(df)
     if worst > 1e-6:
         raise SystemExit(
@@ -118,3 +123,10 @@ if __name__ == "__main__":
     print(f"Set {', '.join(STATS)} to empty in gameweeks {missing}")
     print("Rows changed per feature:", changed)
     print(f"Wrote {OUTPUT}")
+
+    if os.path.exists(config.ALL_PLAYERS_DATA):
+        everyone = pd.read_csv(config.ALL_PLAYERS_DATA, low_memory=False)
+        everyone.loc[everyone["round"].isin(missing), STATS] = np.nan
+        everyone = rebuild(everyone, missing, history=fixed)
+        everyone.to_csv(config.ALL_PLAYERS_DATA_XP_FIXED, index=False)
+        print(f"Wrote {config.ALL_PLAYERS_DATA_XP_FIXED}")
