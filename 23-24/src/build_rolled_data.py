@@ -43,11 +43,10 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-import numpy as np
-import pandas as pd
-
 import config
 import fix_missing_xp
+import numpy as np
+import pandas as pd
 
 YEARS = config.SEASON.split("-")  # "23-24" -> ["23", "24"]
 VAASTAV = (
@@ -340,7 +339,8 @@ def build():
     df["date"] = pd.to_datetime(df["kickoff_time"]).dt.date.astype(str)
     logs, understat_id = understat_matches(
         df.loc[
-            played, ["fpl_id", "name", "date", "minutes", "team_h_score", "team_a_score"]
+            played,
+            ["fpl_id", "name", "date", "minutes", "team_h_score", "team_a_score"],
         ]
     )
     df = df.merge(logs, on=["fpl_id", "date"], how="left", validate="one_to_one")
@@ -391,4 +391,6 @@ if __name__ == "__main__":
     print("Teams:", sorted(df["team"].unique()))
     print("Columns with empty values:", missing or "none")
     print(f"Wrote {config.RAW_DATA}")
-    print(f"Wrote {config.ALL_PLAYERS_DATA} ({len(everyone)} rows, every player with a fixture)")
+    print(
+        f"Wrote {config.ALL_PLAYERS_DATA} ({len(everyone)} rows, every player with a fixture)"
+    )
