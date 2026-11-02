@@ -6,7 +6,7 @@ import pandas as pd
 
 import config
 
-DROP_COLS = ["kfold", "fpl_id", "round", "xP"]  # never used as features
+DROP_COLS = ["kfold", "fpl_id", "round", "xP", "minutes_rolling_1"]  # never used as features
 
 
 def missing_target_gws(df):
@@ -36,6 +36,17 @@ def load(pos, drop_missing_target=True):
     if drop_missing_target:
         df = df[~df.kfold.isin(config.MISSING_TARGET_GWS)]
     return df
+
+
+def training_rows(df):
+    """The rows models are trained on: players with minutes in the previous 3 gameweeks
+    (config.ACTIVE_COL). That window is only complete from gameweek 4, so gameweeks 2-3 use the
+    previous gameweek's minutes and gameweek 1, with no history, keeps everyone. Validation and
+    prediction rows are never filtered, so every player still gets a prediction."""
+    active = df[config.ACTIVE_COL] > 0
+    active |= (df.kfold.between(2, 3)) & (df["minutes_rolling_1"] > 0)
+    active |= df.kfold == 1
+    return df[active]
 
 
 def features(df):

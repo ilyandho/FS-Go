@@ -14,22 +14,14 @@ How the source builds them (checked by --check, which reproduces the source valu
   * xP_rolling_k: mean of the last k gameweeks, 0 until k earlier gameweeks exist
   * xP_k_ewm: exponentially weighted mean with span k (adjust=False)
 
-Reads  config.RAW_DATA
-Writes config.RAW_DATA_XP_FIXED (same rows and columns)
-
-Usage: python fix_missing_xp.py           # write the fixed file
-       python fix_missing_xp.py --check   # only check the rebuild against the source values
+Used by ../../optimizer/prepare_data.py, which writes the full player data (config.FULL_DATA)
+with fix(); fix(df, check_only=True) only checks the rebuild against the source values.
 """
 
-import argparse
-
+import config
 import numpy as np
 import pandas as pd
 
-import config
-
-SOURCE = config.RAW_DATA
-OUTPUT = config.RAW_DATA_XP_FIXED
 STATS = [
     "xP",
     "xP_25",
@@ -122,15 +114,3 @@ def fix(df, id_col="fpl_id", check_only=False):
     print(f"Set {', '.join(stats(df))} to empty in gameweeks {missing}")
     print("Rows changed per feature:", changed)
     return fixed
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--check", action="store_true", help="Only check the rebuild")
-    args = parser.parse_args()
-
-    df = pd.read_csv(SOURCE, low_memory=False)
-    fixed = fix(df, check_only=args.check)
-    if not args.check:
-        fixed.to_csv(OUTPUT, index=False)
-        print(f"Wrote {OUTPUT}")

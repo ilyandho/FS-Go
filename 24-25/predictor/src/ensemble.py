@@ -109,7 +109,7 @@ def run(fold, pos, names, method, inner, top_k=3, name=None):
     df = data.load(pos.upper())  # without the gameweeks that have no target
 
     # Time-based split, identical to train.py
-    df_train = df[df.kfold < fold].reset_index(drop=True)
+    df_train = data.training_rows(df[df.kfold < fold]).reset_index(drop=True)
     df_valid = df[df.kfold == fold].reset_index(drop=True)
 
     if method == "stack":

@@ -1,7 +1,7 @@
 # FS-Go: per-position xP models
 
 Predicts a Fantasy Premier League player's expected points (`xP`) for the next gameweek, with a separate
-model for each position (GK, DEF, MID, FWD). Nine base models and two ensembles compete at four
+model for each position (GK, DEF, MID, FWD). Nine base models and two ensembles compete at seven
 model selection points in one season (`config.SEASON`, now 2023-24), and each selected model is scored on the gameweeks it
 would have been used for.
 
@@ -31,7 +31,7 @@ src/
   ensemble.sh               runs ensemble.py for every position and selection point
   deploy.py                 scores every saved model on the gameweeks after its selection point
   compare.py                prints the comparison table per position
-  predictor.py              predicts every player for gameweeks 21 to 38 with the selected models
+  predictor.py              predicts every player for gameweeks 5 to 38 with the selected models
   performance.py            scores those predictions per gameweek and position
   rank_features.py          optional: ranks candidate features (writes features.py; not used by the models yet)
 ```
@@ -63,7 +63,7 @@ python deploy.py
 python compare.py
 python compare.py --pos GK --folds     # one position, with each selection point and window
 
-# 6. Predictions for gameweeks 21 to 38 with the selected model of each window
+# 6. Predictions for gameweeks 5 to 38 with the selected model of each window
 python predictor.py
 
 # 7. Performance of those predictions per gameweek and position
@@ -77,17 +77,16 @@ methods, and `TOP_K=4 BASE_MODELS="ridge svr cat" bash ensemble.sh` changes the 
 
 ## How models are evaluated
 
-A fold is a gameweek. Models are chosen at four **selection points: gameweeks 21, 26, 31 and 36**
-(2024-25; for 2023-24 they are 20, 25, 30 and 35, because gameweek 26 has no target). The steps below
-use the 2024-25 points.
+A fold is a gameweek. Models are chosen at seven **selection points: gameweeks 5, 10, 15, 20, 25, 30 and
+35** (2023-24; gameweek 26 has no target, so the later points sit one gameweek earlier than 2024-25's).
 
-1. At gameweek 21, every model trains on gameweeks 1 to 20 and is validated on gameweek 21.
+1. At gameweek 5, every model trains on gameweeks 1 to 4 and is validated on gameweek 5.
 2. The model with the lowest validation MAE is selected. The dummy baseline is never selected.
-3. The selected model is used, unchanged, for the next 5 gameweeks: 22 to 26.
-4. The same is repeated at gameweeks 26, 31 and 36. The last model is used for 37 and 38, the end of
+3. The selected model is used, unchanged, up to and including the next selection point: 6 to 10.
+4. The same is repeated at every later point. The last model (35) is used for 36 to 38, the end of
    the season.
 
-`predictor.py` also predicts gameweek 21 with the model selected at 21. Those predictions were used to
+`predictor.py` also predicts gameweek 5 with the model selected at 5. Those predictions were used to
 select that model, so they are marked `in_selection` and left out of the scores.
 
 The selection points and the 5-gameweek horizon are set in `src/config.py`. Scores are mean absolute
@@ -109,21 +108,21 @@ before the selection point).
 
 ## Results
 
-MAE on the gameweeks after each selection point, from `python compare.py`. Gameweeks 22, 32 and 34 are
-left out because the source data has no xP for them (see "Known issues"), which leaves 14 gameweeks.
+MAE on the gameweeks after each selection point (6 to 38), from `python compare.py`. Gameweek 26 is left
+out because the source data has no xP for it (see "Known issues"), which leaves 32 gameweeks.
 
-| Position | Selection procedure | Best fixed model | Its MAE | Picks at gameweeks 21, 26, 31, 36 |
+| Position | Selection procedure | Best fixed model | Its MAE | Picks at gameweeks 5, 10, 15, 20, 25, 30, 35 |
 |---|---|---|---|---|
-| GK | 1.022 | ens_mean_base | 0.975 | ens_top3, dt, cat, rf |
-| DEF | 0.821 | lgbm | 0.801 | rf, hgb, ens_mean_base, ens_mean_base |
-| MID | 0.838 | ens_mean_base | 0.835 | cat, ens_mean_base, cat, svr |
-| FWD | 0.993 | ens_top3 | 0.961 | svr, cat, svr, lgbm |
+| GK | 1.045 | cat | 1.055 | hgb, ens_top3, hgb, ens_top3, rf, rf, ridge |
+| DEF | 0.912 | cat | 0.915 | cat, ens_mean_base, ens_top3, cat, lgbm, ens_top3, lgbm |
+| MID | 0.874 | ens_mean_base / cat | 0.870 | ens_mean_base, cat, lgbm, cat, cat, ens_mean_base, ens_mean_base |
+| FWD | 1.109 | ens_top3 | 1.081 | ens_mean_base, lgbm, ens_mean_base, cat, lgbm, cat, svr |
 
-* **The procedure never beats the best fixed model.** It is close for MID and behind by 0.02 to 0.05
-  elsewhere. A single validation gameweek is too noisy to pick between close models, so the pick changes at
-  almost every selection point, and it sometimes lands on a weak model such as dt.
-* **ens_mean_base is the most reliable choice.** It is within about 0.01 of the best fixed model for every
-  position, and it is the best for GK and MID.
+* **The procedure beats every fixed model for GK and DEF**, is 0.004 behind the best for MID and 0.03 behind
+  for FWD. A single validation gameweek is too noisy to pick between close models, so the pick changes at
+  almost every selection point.
+* **cat and ens_mean_base are the most reliable choices.** One of them is within 0.03 of the best fixed model
+  for every position.
 * The best fixed model is only known in hindsight, so its MAE is a little optimistic.
 
 ## Outputs

@@ -7,10 +7,11 @@ SEASON = "23-24"
 
 # Folds are gameweeks. Each fold trains on every gameweek before it and validates on that gameweek.
 # VALID_FOLDS are the model selection points: at gameweek 21, train on gameweeks 1-20, validate on 21,
-# and use the selected model for the next HORIZON gameweeks (22-26). Then repeat the selection at 26, 31
-# and 36. The last window is cut short by the end of the season (37-38).
+# and use the selected model up to and including the next selection point (22-26). The first point,
+# 5, makes gameweeks 6-38 all predicted out of sample. After the last point the model is used for
+# HORIZON gameweeks, cut short by the end of the season (36-38 for 2023-24).
 # 2023-24 has no target in gameweek 26, so its points are moved one gameweek earlier.
-VALID_FOLDS = {"23-24": [20, 25, 30, 35], "24-25": [21, 26, 31, 36]}[SEASON]
+VALID_FOLDS = {"23-24": [5, 10, 15, 20, 25, 30, 35], "24-25": [5, 10, 15, 21, 26, 31, 36]}[SEASON]
 HORIZON = 5
 
 # Gameweeks with no target: the source data has xP = 0 for every player in them. They are left out of

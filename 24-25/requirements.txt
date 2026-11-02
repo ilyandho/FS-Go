@@ -9,3 +9,9 @@ xgboost==3.2.0
 catboost==1.2.10
 matplotlib==3.7.5
 jupyter
+
+# optimizer/
+pymc==5.28.5
+arviz==0.23.4
+pyvinecopulib==0.7.6
+pyscipopt==6.3.0

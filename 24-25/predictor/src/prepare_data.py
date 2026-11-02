@@ -1,27 +1,30 @@
-"""Build one data file per position from the raw 2024-25 data.
+"""Build one data file per position from the full 2024-25 player data.
 
-1. Downloads config.DATA_URL to config.RAW_DATA, unless the file is already there.
-2. Runs fix_missing_xp.py to write config.RAW_DATA_XP_FIXED, unless that file is already there.
-3. Keeps each position's rows and the columns its models use (model_dispatcher), plus the
-   identifiers and the target.
+Reads config.FULL_DATA: every player in the FPL pool each gameweek, also those who did not play,
+with the xP features rebuilt without the missing gameweeks (written by
+../../optimizer/prepare_data.py, which this runs first if the file is missing). Keeps each
+position's rows and the columns its models use (model_dispatcher), plus the identifiers and the
+target, with the identifiers renamed to the predictor's (element -> fpl_id, GK/DEF/MID/FWD).
+
+Every player is kept, not only those who played: whether a player plays is only known after the
+gameweek, so filtering on it would choose the rows to predict by the outcome.
 
 Writes ../inputs/fg_data_{pos}.csv (read by create_folds.py)
 
-Usage: python prepare_data.py           # reuse the raw files when present
-       python prepare_data.py --fresh   # download and rebuild them
+Usage: python prepare_data.py
 """
 
-import argparse
 import os
 import subprocess
 import sys
 
-import pandas as pd
-
 import config
 import model_dispatcher
+import pandas as pd
 
 ID_COLS = ["fpl_id", "round", "position", "xP"]
+# Only for choosing training rows (data.training_rows), never a model input
+FILTER_COLS = ["minutes_rolling_1"]
 NUM_COLS = {
     "GK": model_dispatcher.num_cols_gk,
     "DEF": model_dispatcher.num_cols_def,
@@ -32,26 +35,19 @@ NUM_COLS = {
 
 def columns(pos):
     """Identifiers, target and model features of a position, without duplicates."""
-    cols = ID_COLS + model_dispatcher.cat_cols + NUM_COLS[pos]
+    cols = ID_COLS + FILTER_COLS + model_dispatcher.cat_cols + NUM_COLS[pos]
     return list(dict.fromkeys(cols))
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--fresh", action="store_true", help="Download and rebuild the raw files"
+    if not os.path.exists(config.FULL_DATA):
+        builder = os.path.join("..", "..", "optimizer", "prepare_data.py")
+        subprocess.run([sys.executable, builder], check=True)
+
+    raw = pd.read_csv(config.FULL_DATA, low_memory=False).rename(
+        columns={"element": "fpl_id"}
     )
-    args = parser.parse_args()
-
-    if args.fresh or not os.path.exists(config.RAW_DATA_XP_FIXED):
-        if args.fresh or not os.path.exists(config.RAW_DATA):
-            print(f"Downloading {config.DATA_URL}")
-            pd.read_csv(config.DATA_URL, low_memory=False).to_csv(
-                config.RAW_DATA, index=False
-            )
-        subprocess.run([sys.executable, "fix_missing_xp.py"], check=True)
-
-    raw = pd.read_csv(config.RAW_DATA_XP_FIXED, low_memory=False)
+    raw["position"] = raw["position"].map(config.FULL_DATA_POSITIONS)
     for pos in config.POSITIONS:
         df = raw.loc[raw["position"] == pos, columns(pos)]
         path = f"../inputs/fg_data_{pos.lower()}.csv"

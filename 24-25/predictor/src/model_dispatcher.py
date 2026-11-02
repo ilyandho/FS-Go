@@ -46,6 +46,9 @@ def tree_prep(num_cols, cat_cols):
 
 
 ## FEATS
+# Features come from the full player data (every player each gameweek, config.FULL_DATA). It has
+# no xGChain / xGBuildup / CBIT columns, and its Elo and fixture-difficulty columns are team_elo,
+# opponent_elo, elo_diff, home_team_difficulty and away_team_difficulty.
 cat_cols = [
     "team",
     "opponent_team",
@@ -53,19 +56,17 @@ cat_cols = [
 ]
 
 num_cols_gk = [
-    "elo",
-    "elo_h",
-    "elo_a",
-    "team_h_difficulty",
-    "team_a_difficulty",
+    "team_elo",
+    "opponent_elo",
+    "elo_diff",
+    "home_team_difficulty",
+    "away_team_difficulty",
     "win_prob",
     "value",
     "selected_by_percent",
     "transfers_in",
     "transfers_out",
     "xP_rolling_3",
-    "xGChain_rolling_3",
-    "xGBuildup_rolling_3",
     "minutes_rolling_3",
     "starts_rolling_3",
     "expected_goals_conceded_rolling_3",
@@ -75,16 +76,15 @@ num_cols_gk = [
     "influence_rolling_3",
     "creativity_rolling_3",
     "threat_rolling_3",
-    "cbitr_ewm_probability",
     "tackles_rolling_3",
 ]  # numeric features
 
 num_cols_def = [
-    "elo",
-    "elo_h",
-    "elo_a",
-    "team_h_difficulty",
-    "team_a_difficulty",
+    "team_elo",
+    "opponent_elo",
+    "elo_diff",
+    "home_team_difficulty",
+    "away_team_difficulty",
     "win_prob",
     "value",
     "selected_by_percent",
@@ -94,8 +94,6 @@ num_cols_def = [
     "expected_goals_rolling_3",
     "expected_assists_rolling_3",
     "expected_goal_involvements_rolling_3",
-    "xGChain_rolling_3",
-    "xGBuildup_rolling_3",
     "minutes_rolling_3",
     "starts_rolling_3",
     "expected_goals_conceded_rolling_3",
@@ -105,16 +103,15 @@ num_cols_def = [
     "influence_rolling_3",
     "creativity_rolling_3",
     "threat_rolling_3",
-    "cbitr_ewm_probability",
     "tackles_rolling_3",
 ]  # numeric features
 
 num_cols_mid = [
-    "elo",
-    "elo_h",
-    "elo_a",
-    "team_h_difficulty",
-    "team_a_difficulty",
+    "team_elo",
+    "opponent_elo",
+    "elo_diff",
+    "home_team_difficulty",
+    "away_team_difficulty",
     "win_prob",
     "value",
     "selected_by_percent",
@@ -124,24 +121,21 @@ num_cols_mid = [
     "expected_goals_rolling_3",
     "expected_assists_rolling_3",
     "expected_goal_involvements_rolling_3",
-    "xGChain_rolling_3",
-    "xGBuildup_rolling_3",
     "minutes_rolling_3",
     "starts_rolling_3",
     "ict_index_rolling_3",
     "influence_rolling_3",
     "threat_rolling_3",
     "creativity_rolling_3",
-    "cbitr_ewm_probability",
     "tackles_rolling_3",
 ]  # numeric features
 
 num_cols_fwd = [
-    "elo",
-    "elo_h",
-    "elo_a",
-    "team_h_difficulty",
-    "team_a_difficulty",
+    "team_elo",
+    "opponent_elo",
+    "elo_diff",
+    "home_team_difficulty",
+    "away_team_difficulty",
     "win_prob",
     "value",
     "selected_by_percent",
@@ -151,8 +145,6 @@ num_cols_fwd = [
     "expected_goals_rolling_3",
     "expected_assists_rolling_3",
     "expected_goal_involvements_rolling_3",
-    "xGChain_rolling_3",
-    "xGBuildup_rolling_3",
     "minutes_rolling_3",
     "starts_rolling_3",
     "ict_index_rolling_3",
