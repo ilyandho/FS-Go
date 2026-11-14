@@ -6,7 +6,7 @@ the column-permuted latent uniforms U, plus held-out log-likelihoods.
 
 The history (pool, overhaul filtering, data augmentation, eqs. 3.6-3.7) is built by the
 notebook's own run_copula_pipeline (cell 11), run as in the rolling season with diagnostics=True;
-the only addition is one line that keeps a copy of U. Writes thesis/results/vine_diagnostics_2425.csv.
+the only addition is one line that keeps a copy of U. Writes thesis/outputs/results/vine_diagnostics_2425.csv.
 """
 import json
 import multiprocessing
@@ -23,7 +23,7 @@ from threadpoolctl import threadpool_limits
 warnings.filterwarnings("ignore")
 THESIS = Path(__file__).resolve().parent
 NOTEBOOK_DIR = THESIS.parent / "24-25/optimizer/notebooks"
-OUT = THESIS / "results/vine_diagnostics_2425.csv"
+OUT = THESIS / "outputs/results/vine_diagnostics_2425.csv"
 SEED = 42  # the rolling season's seed
 HOLDOUT_WEEKS = (4, 6, 8)  # as vine_diagnostics in the notebook
 WORKERS = 4

@@ -1,12 +1,12 @@
 league fits for gameweeks {'Goalkeeper': '6-38', 'Defender': '6-38', 'Midfielder': '6-38', 'Forward': '6-38'}
 {6: 23881, 7: 38054, 8: 13603, 9: 593532, 10: 749244, 11: 696127, 12: 4131447, 13: 152245, 14: 1441046, 15: 1222335, 16: 1546929, 17: 198971, 18: 2634457, 19: 577273, 20: 69718, 21: 4213, 22: 1441046, 23: 4131447, 24: 1222335, 25: 152245, 26: 7497, 27: 901, 28: 198971, 29: 749244, 30: 593532, 31: 23881, 32: 1546929, 33: 577273, 34: 2634457, 35: 696127, 36: 38351, 37: 38054, 38: 13603}
 predictions for gameweeks 5-38
-[check 1] recording copy == notebook function at GW12: True (122 s for both)
+[check 1] recording copy == notebook function at GW12: True (119 s for both)
           GW12 extra: sense 1, |W_o| 5575 unique of 16970 draws, statuses ['optimal']
 [mvt] GW 6 vs    23881: lambda*=0.000 P(beat)=92.3% | xP 72.1->73.4 vs opp 75.3  [LOSS] | pts 62->63 vs opp 39.0  [WIN]
 [mvt] GW 7 vs    38054: lambda*=0.000 P(beat)=77.1% | xP 61.9->64.0 vs opp 67.2  [LOSS] | pts 42->42 vs opp 42.0  [TIE]
 [mvt] GW 8 vs    13603: lambda*=0.000 P(beat)=54.9% | xP 58.6->63.9 vs opp 41.699999999999996  [WIN] | pts 58->59 vs opp 32.0  [WIN]
-[check 2] GW6-8 at r = 0.5, 30 s: 3.4 min per gameweek
+[check 2] GW6-8 at r = 0.5, 30 s: 3.5 min per gameweek
           GW6: match | transfer True lambda* 0.0 P(beat) 0.923 (saved 0.923) | SCIP ['optimal'] | fallback None
           GW7: match | transfer True lambda* 0.0 P(beat) 0.771 (saved 0.771) | SCIP ['optimal'] | fallback None
           GW8: match | transfer True lambda* 0.0 P(beat) 0.548 (saved 0.548) | SCIP ['optimal'] | fallback None

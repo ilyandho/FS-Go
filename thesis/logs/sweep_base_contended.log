@@ -1,0 +1,39 @@
+league fits for gameweeks {'Goalkeeper': '6-38', 'Defender': '6-38', 'Midfielder': '6-38', 'Forward': '6-38'}
+{6: 23881, 7: 38054, 8: 13603, 9: 593532, 10: 749244, 11: 696127, 12: 4131447, 13: 152245, 14: 1441046, 15: 1222335, 16: 1546929, 17: 198971, 18: 2634457, 19: 577273, 20: 69718, 21: 4213, 22: 1441046, 23: 4131447, 24: 1222335, 25: 152245, 26: 7497, 27: 901, 28: 198971, 29: 749244, 30: 593532, 31: 23881, 32: 1546929, 33: 577273, 34: 2634457, 35: 696127, 36: 38351, 37: 38054, 38: 13603}
+predictions for gameweeks 5-38
+GW6: no feasible w(lambda) found, skipping
+[base] GW 7 vs    38054: lambda*=0.000 P(beat)=81.8% | xP 59.4->66.7 vs opp 67.2  [LOSS] | pts 40->42 vs opp 42.0  [TIE]
+[base] GW 8 vs    13603: lambda*=0.000 P(beat)=65.9% | xP 56.1->59.6 vs opp 41.699999999999996  [WIN] | pts 36->43 vs opp 32.0  [WIN]
+[base] GW 9 vs   593532: lambda*=0.000 P(beat)=87.1% | xP 56.3->61.6 vs opp 62.599999999999994  [LOSS] | pts 62->75 vs opp 73.0  [WIN]
+[base] GW10 vs   749244: lambda*=0.000 P(beat)=96.4% | xP 55.4->56.4 vs opp 50.70000000000001  [WIN] | pts 49->44 vs opp 30.0  [WIN]
+[base] GW11 vs   696127: lambda*=0.000 P(beat)=75.6% | xP 54.2->60.4 vs opp 60.1  [WIN] | pts 34->34 vs opp 57.0  [LOSS]
+[base] GW12 vs  4131447: lambda*=0.000 P(beat)=95.3% | xP 42.1->46.8 vs opp 60.8  [LOSS] | pts 30->31 vs opp 55.0  [LOSS]
+[base] GW13 vs   152245: lambda*=0.000 P(beat)=37.3% | xP 43.1->47.0 vs opp 73.9  [LOSS] | pts 54->54 vs opp 80.0  [LOSS]
+[base] GW14 vs  1441046: lambda*=0.000 P(beat)=11.2% | xP 53.9->67.9 vs opp 79.7  [LOSS] | pts 58->75 vs opp 59.0  [WIN]
+[base] GW15 vs  1222335: lambda*=0.000 P(beat)=19.0% | xP 54.1->60.7 vs opp 67.80000000000001  [LOSS] | pts 77->57 vs opp 56.0  [WIN]
+[base] GW16 vs  1546929: lambda*=0.000 P(beat)=30.4% | xP 65.7->68.5 vs opp 78.8  [LOSS] | pts 50->49 vs opp 52.0  [LOSS]
+[base] GW17 vs   198971: lambda*=0.000 P(beat)=46.8% | xP 63.9->68.2 vs opp 80.2  [LOSS] | pts 35->57 vs opp 89.0  [LOSS]
+[base] GW18 vs  2634457: lambda*=0.000 P(beat)=41.9% | xP 67.5->71.8 vs opp 82.7  [LOSS] | pts 53->57 vs opp 66.0  [LOSS]
+[base] GW19 vs   577273: lambda*=0.000 P(beat)=23.2% | xP 77.1->77.6 vs opp 91.9  [LOSS] | pts 66->55 vs opp 96.0  [LOSS]
+[base] GW20 vs    69718: lambda*=0.000 P(beat)=48.7% | xP 68.4->75.9 vs opp 75.90000000000002  [LOSS] | pts 66->63 vs opp 67.0  [LOSS]
+GW21: no feasible w(lambda) found, skipping
+[base] GW22 vs  1441046: lambda*=0.000 P(beat)=27.9% | xP 0.0->0.0 vs opp 0.0  [TIE] | pts 31->31 vs opp 48.0  [LOSS]
+GW23: no feasible w(lambda) found, skipping
+[base] GW24 vs  1222335: lambda*=0.000 P(beat)=73.2% | xP 84.4->98.2 vs opp 110.7  [LOSS] | pts 72->71 vs opp 84.0  [LOSS]
+GW25: no feasible w(lambda) found, skipping
+[base] GW26 vs     7497: lambda*=0.000 P(beat)=88.9% | xP 76.1->81.5 vs opp 81.2  [WIN] | pts 88->77 vs opp 88.0  [LOSS]
+[base] GW27 vs      901: lambda*=0.000 P(beat)=69.7% | xP 70.2->73.7 vs opp 70.8  [WIN] | pts 59->57 vs opp 52.0  [WIN]
+GW28: no feasible w(lambda) found, skipping
+[base] GW29 vs   749244: lambda*=0.000 P(beat)=95.8% | xP 36.0->59.9 vs opp 59.29999999999999  [WIN] | pts 27->66 vs opp 66.0  [TIE]
+GW30: no feasible w(lambda) found, skipping
+[base] GW31 vs    23881: lambda*=0.000 P(beat)=82.5% | xP 52.4->58.8 vs opp 60.7  [LOSS] | pts 49->54 vs opp 51.0  [WIN]
+GW32: no feasible w(lambda) found, skipping
+[base] GW33 vs   577273: lambda*=0.000 P(beat)=67.8% | xP 65.1->76.7 vs opp 92.60000000000001  [LOSS] | pts 48->34 vs opp 50.0  [LOSS]
+[base] GW34 vs  2634457: held (no transfer clears the margin) P(beat)=82.8% | xP 0.0->0.0 vs opp 0.0  [TIE] | pts 45->45 vs opp 76.0  [LOSS]
+[base] GW35 vs   696127: lambda*=0.000 P(beat)=68.2% | xP 42.2->55.4 vs opp 53.9  [WIN] | pts 27->44 vs opp 52.0  [LOSS]
+GW36: no feasible w(lambda) found, skipping
+[base] GW37 vs    38054: lambda*=0.000 P(beat)=91.5% | xP 52.0->64.8 vs opp 53.8  [WIN] | pts 43->38 vs opp 53.0  [LOSS]
+GW38: no feasible w(lambda) found, skipping
+rolling_optimization_results_base_rsweep.joblib: 24 / 33 gameweeks solved, skipped [6, 21, 23, 25, 28, 30, 32, 36, 38], single-squad fallback [], 41 min
+baseline vs saved: DIFFER in GW [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]
+done

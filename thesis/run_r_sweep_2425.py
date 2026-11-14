@@ -67,11 +67,31 @@ head, tail = src.rsplit("    return result", 1)
 src = head + '    result["extra"] = _capture(locals())\n    return result' + tail
 SOLVE_LOG, EXTRAS = [], {}
 notebook_solve = g["solve_for_lambda"]
+notebook_build = g["build_mean_variance_model"]
+
+
+def build_without_perspective(*args, **kwargs):
+    """The notebook's model with SCIP's perspective nonlinear handler switched off. With it on,
+    SCIP 10 stops with "error in input data" on the nonconvex branch (e.g. GW6 at r = 1.0,
+    lambda = 2.5) and the process then segfaults; off, every solve of that week is optimal.
+    It is a solver setting, not a model change: a solve that reaches optimality returns the same
+    optimum either way."""
+    out = notebook_build(*args, **kwargs)
+    out[0].setParam("nlhdlr/perspective/enabled", False)
+    return out
 
 
 def logged_solve(m, wv, lin, q, lin_cov, P, lam, sense=1):
-    sol = notebook_solve(m, wv, lin, q, lin_cov, P, lam, sense=sense)
-    SOLVE_LOG.append({"lambda": float(lam), "status": m.getStatus(), "solved": sol is not None})
+    """The notebook's solve_for_lambda, with its SCIP status logged. A SCIP error at one lambda
+    is logged (status "error") and that lambda skipped, where the notebook would lose the whole
+    gameweek; the other lambdas are still solved."""
+    try:
+        sol = notebook_solve(m, wv, lin, q, lin_cov, P, lam, sense=sense)
+        status = m.getStatus()
+    except Exception as e:
+        print(f"SCIP error at lambda = {lam}: {e!r}", flush=True)
+        sol, status = None, "error"
+    SOLVE_LOG.append({"lambda": float(lam), "status": status, "solved": sol is not None})
     return sol
 
 
@@ -115,6 +135,7 @@ def _capture(L):
 
 g["_capture"] = _capture
 g["solve_for_lambda"] = logged_solve
+g["build_mean_variance_model"] = build_without_perspective
 exec(src, g)
 recording_pipeline = g["run_optimization_pipeline"]
 

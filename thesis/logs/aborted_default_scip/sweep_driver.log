@@ -1,0 +1,4 @@
+logs/sweep_jobs.sh: line 5: 1061535 Segmentation fault         (core dumped) python3 -u run_r_sweep_2425.py run $1 $2 > logs/sweep_$name.log 2>&1
+Terminated                 python3 -u run_r_sweep_2425.py run $1 $2 > logs/sweep_$name.log 2>&1
+Terminated                 python3 -u run_r_sweep_2425.py run $1 $2 > logs/sweep_$name.log 2>&1
+Terminated                 python3 -u run_r_sweep_2425.py run $1 $2 > logs/sweep_$name.log 2>&1

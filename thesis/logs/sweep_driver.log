@@ -1,0 +1,1 @@
+Terminated                 printf "mvt 1.0\nmvt 0.99\nmvt 0.95\nmvt 0.9\nmvt 0.8\nmvt 0.6\nmvt 0.5\nbase\n" | xargs -P 3 -L 1 logs/sweep_jobs.sh

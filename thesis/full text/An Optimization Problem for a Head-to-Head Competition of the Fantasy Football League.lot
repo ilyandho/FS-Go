@@ -1,0 +1,16 @@
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {3.1}{\ignorespaces A table showing the squad combinations for an opponent}}{23}{}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {4.1}{\ignorespaces Walk-forward accuracy of the xP predictions on the gameweeks each selected model was used for (against xP), on the population each season's models were selected on: players who played in 2023-24, every player in 2024-25. ``Best fixed'' is the single candidate with the lowest MAE over the same gameweeks, known only in hindsight.}}{36}{}%
+\contentsline {table}{\numberline {4.2}{\ignorespaces Accuracy of the deployed predictions on every player with a fixture, and on the players who played. Rows per gameweek are means.}}{37}{}%
+\contentsline {table}{\numberline {4.3}{\ignorespaces MAE of each candidate over the deployed gameweeks if it had been used throughout, on the population of Table~\ref {tab:predictor-mae}. ``Procedure'' is the walk-forward selection.}}{38}{}%
+\contentsline {table}{\numberline {4.4}{\ignorespaces Stage 1: out-of-sample log loss of the predicted player shares in the real FantasyGo field, gameweeks 6--38 (lower is better).}}{41}{}%
+\contentsline {table}{\numberline {4.5}{\ignorespaces Stage 1: the simulated field against the real contest, means over gameweeks 6--38. ``Top-20\% cut'' is the score of the entry at $r=80\%$.}}{42}{}%
+\contentsline {table}{\numberline {4.6}{\ignorespaces Stage 1: MVT at each $r$ against the baseline, 33 gameweeks. $\sigma _w$ is the standard deviation of the chosen team's points under $\Sigma _\delta $; the baseline's is 18.64. Hits: gameweeks finishing in the top $1-r$ of the real contest. $\Delta $ points: mean difference per gameweek (MVT minus baseline) with a 95\% bootstrap interval; $p$: Wilcoxon signed-rank test, $n=33$.}}{42}{}%
+\contentsline {table}{\numberline {4.7}{\ignorespaces Stage 1: calibration of MVT's estimated $\mathrm {Prob}\{Y_w>0\}$, all $r$ pooled (231 team-gameweeks).}}{44}{}%
+\contentsline {table}{\numberline {4.8}{\ignorespaces Stage 2: vine diagnostics over the 33 gameweeks of the rolling season. Held-out log-likelihoods are available in 27 gameweeks (at least five weeks of history must remain).}}{47}{}%
+\contentsline {table}{\numberline {4.9}{\ignorespaces Stage 2: MVT at each $r$ against the baseline, 33 gameweeks. Nonconvex: gameweeks on the nonconvex branch of \eqref {Eq:mean_var_problem}. $\sigma _w$: mean standard deviation of the chosen team's points under $\Sigma _\delta $. $\Delta $ points: mean difference per gameweek (MVT minus baseline) with a 95\% bootstrap interval; $p$: Wilcoxon signed-rank test. Wins count ties as 0.5; $p_W$: sign test on the gameweeks where the two match results differ. $\hat P$: mean estimated $\mathrm {Prob}\{Y_w>0\}$.}}{50}{}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {A.1}{Bivariate copula families, corresponding copula densities, $h$-functions, and inverse $h$-functions.}}{64}{}%
