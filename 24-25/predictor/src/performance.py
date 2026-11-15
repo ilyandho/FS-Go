@@ -22,12 +22,11 @@ import argparse
 import os
 import sys
 
+import compare
+import config
 import numpy as np
 import pandas as pd
 from sklearn import metrics
-
-import compare
-import config
 
 PREDICTIONS = f"{config.MODEL_OUTPUT}predictions.csv"
 DEPLOY = f"{config.MODEL_OUTPUT}deploy_results.csv"

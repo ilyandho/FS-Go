@@ -1,10 +1,10 @@
 """Predict every player's xP for gameweeks 21 to 38 with the model selected for each gameweek.
 
 At each selection point s (config.VALID_FOLDS), the model with the lowest validation MAE at s is
-selected (compare.selections) and used for the next config.HORIZON gameweeks (deploy.windows).
-Gameweek 21 comes before the first window, so it is predicted by the model selected at 21. That
-model was trained on gameweeks 1 to 20, but its gameweek 21 predictions were also used to select it,
-so those rows are flagged with in_selection = True.
+selected (compare.selections) and used up to and including the next selection point
+(deploy.windows). The first selection point comes before the first window, so it is predicted by
+its own selected model. That model was trained on the gameweeks before it, but its predictions there
+were also used to select it, so those rows are flagged with in_selection = True.
 
 Writes ../models/predictions.csv, one row per player and gameweek:
   pos, round, fpl_id, name, team, selected_at, model, pred, xP, in_selection
@@ -20,18 +20,17 @@ Usage: python predictor.py            # all positions
 import argparse
 import os
 
-import joblib
-import pandas as pd
-from sklearn import metrics
-
 import compare
 import config
 import data
 import deploy
 import ensemble  # noqa: F401  (EnsembleRegressor must be importable to load ensemble models)
+import joblib
+import pandas as pd
+from sklearn import metrics
 
 OUTPUT = f"{config.MODEL_OUTPUT}predictions.csv"
-RAW_DATA = config.RAW_DATA_XP_FIXED
+PLAYER_DATA = config.FULL_DATA
 
 
 def schedule(last_gw):
@@ -76,15 +75,15 @@ def run(pos, results):
 
 
 def add_names(pred):
-    """Add player and team names from the raw data, when it is present."""
-    if not os.path.exists(RAW_DATA):
-        print(f"No {RAW_DATA}: names left out")
+    """Add player and team names from the player data, when it is present."""
+    if not os.path.exists(PLAYER_DATA):
+        print(f"No {PLAYER_DATA}: names left out")
         return pred
     raw = pd.read_csv(
-        RAW_DATA,
-        usecols=["fpl_id", "round", "name", "team", "value", "total_points"],
+        PLAYER_DATA,
+        usecols=["element", "round", "name", "team", "value", "total_points"],
         low_memory=False,
-    )
+    ).rename(columns={"element": "fpl_id"})
     raw = raw.drop_duplicates(["fpl_id", "round"])
     named = pred.merge(raw, on=["fpl_id", "round"], how="left", validate="many_to_one")
     cols = [

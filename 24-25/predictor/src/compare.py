@@ -1,7 +1,7 @@
 """Print a comparison table of every base model and ensemble, one table per position.
 
 Follows the selection procedure in config.py: at each selection point (config.VALID_FOLDS) the model
-with the lowest validation MAE is chosen, then used for the next config.HORIZON gameweeks.
+with the lowest validation MAE is chosen, then used up to the next selection point (deploy.windows).
 
 Reads ../models/{POS}_results.csv (train.py), ../models/ensemble_results.csv (ensemble.py) and
 ../models/deploy_results.csv (deploy.py). When a model was run more than once on a fold, only the
@@ -26,9 +26,8 @@ import argparse
 import os
 import sys
 
-import pandas as pd
-
 import config
+import pandas as pd
 
 SELECTED = "selected"
 

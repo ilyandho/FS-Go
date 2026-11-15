@@ -109,29 +109,53 @@ for goalkeepers so it can be reused for d/m/f without re-deriving it each time.
 
 def fit_dirichlet_regression(
     X,
-    select_probs,
+    counts,
+    week,
     n_features,
     sigma=1.0,
-    draws=2000,
-    tune=2000,
+    intercept_sigma=5.0,
+    draws=1000,
+    tune=1000,
     chains=4,
     cores=4,
-    target_accept=0.99,
-    max_treedepth=12,
+    target_accept=0.9,
+    max_treedepth=10,
+    nuts_sampler="numpyro",
     random_seed=None,
 ):
     """
-    One NUTS fit of p ~ Dirichlet(exp(X @ beta)), beta ~ Normal(0, sigma).
+    One NUTS fit of the Dirichlet-Multinomial regression (eq:posterior_league):
+    per week t, the league's owner counts n_t ~ DirMult(N_t, alpha_t) with
+    alpha_{t,k} = exp(c + X_{t,k} @ beta), beta ~ Normal(0, sigma),
+    c ~ Normal(0, intercept_sigma). Rows of X/counts are player-weeks; `week` gives
+    each row's week, and each week is its own observation (p_t integrated out).
+    The intercept c sets the concentration alpha_0, i.e. how much managers'
+    selections disperse around the mean shares.
     Returns (trace, summary_df).
-    """
-    with pm.Model() as model:
-        beta = pm.Normal(
-            "beta", mu=0.0, sigma=sigma, shape=n_features
-        )  # pm.Flat("beta", shape=n_features)
 
-        alpha = pm.math.exp(pt.dot(X, beta))
-        alpha = pt.clip(alpha, 1e-6, 1e6)
-        pm.Dirichlet("p", a=alpha, observed=select_probs)
+    `nuts_sampler` is passed through to pm.sample ("pymc", "nutpie" or "numpyro").
+    """
+    counts = np.asarray(counts, dtype=float)
+    _, week_idx = np.unique(np.asarray(week), return_inverse=True)
+    # (n_weeks, n_rows) indicator, so per-week sums are one matrix product
+    week_onehot = np.zeros((week_idx.max() + 1, len(week_idx)))
+    week_onehot[week_idx, np.arange(len(week_idx))] = 1.0
+    n_total = week_onehot @ counts
+
+    with pm.Model() as model:
+        beta = pm.Normal("beta", mu=0.0, sigma=sigma, shape=n_features)
+        intercept = pm.Normal("intercept", mu=0.0, sigma=intercept_sigma)
+
+        linear = pt.clip(intercept + pt.dot(X, beta), -30, 30)
+        alpha = pt.exp(linear)
+        alpha_0 = pt.dot(week_onehot, alpha)
+
+        # Dirichlet-Multinomial log-mass (eq. 1.21) summed over weeks, dropping the
+        # multinomial coefficient, which doesn't depend on the parameters
+        loglik = pt.sum(pt.gammaln(alpha_0) - pt.gammaln(n_total + alpha_0)) + pt.sum(
+            pt.gammaln(counts + alpha) - pt.gammaln(alpha)
+        )
+        pm.Potential("league_loglik", loglik)
 
         trace = pm.sample(
             draws,
@@ -140,6 +164,7 @@ def fit_dirichlet_regression(
             cores=cores,
             target_accept=target_accept,
             max_treedepth=max_treedepth,
+            nuts_sampler=nuts_sampler,
             random_seed=random_seed,
         )
 
@@ -223,16 +248,21 @@ def fit_position_pipeline(
     gw,
     select_probs_col="league_select_probs",
     position_name="",
-    eps=1e-6,
+    n_league_picks=300,
     random_seed=42,
 ):
     """
     Full pipeline for one position:
-      1. Build X (raw features) and select_probs from player_data.
+      1. Build X (raw features) and each player-week's league owner count from
+         player_data.
       2. Standardize X.
-      3. Fit Dirichlet regression with a weakly-informative prior.
+      3. Fit the Dirichlet-Multinomial regression with a weakly-informative prior.
       4. Prune features whose 94% HDI includes zero.
       5. Re-standardize on the pruned feature set and refit.
+
+    `select_probs_col` is (managers owning the player) / n_league_picks, where
+    n_league_picks = league managers x 15 squad slots (20 x 15 = 300 here), so the
+    counts are recovered exactly as select_probs * n_league_picks.
 
     Returns a dict with everything needed to reuse this model later
     (predicting alpha_{j,T}^league on a new week's features).
@@ -240,13 +270,15 @@ def fit_position_pipeline(
     print(f"\n{'=' * 60}\nPosition: {position_name}\n{'=' * 60}")
 
     # --- 1. raw data -----------------------------------------------------
-    select_probs = player_data[select_probs_col] + eps
-    select_probs = (select_probs / select_probs.sum()).to_numpy(dtype=float)
+    counts = np.rint(
+        player_data[select_probs_col].to_numpy(dtype=float) * n_league_picks
+    )
+    week = player_data["round"].to_numpy()
 
     X_raw = player_data[feats].to_numpy(dtype=float)
     assert not np.isnan(X_raw).any(), f"NaNs in features for {position_name}"
     assert not np.isinf(X_raw).any(), f"Infs in features for {position_name}"
-    assert X_raw.shape[0] == select_probs.shape[0], "row mismatch"
+    assert X_raw.shape[0] == counts.shape[0], "row mismatch"
 
     n_players, n_features = X_raw.shape
     print(f"n_players={n_players}, n_features={n_features}")
@@ -296,7 +328,7 @@ def fit_position_pipeline(
     # --- 3. initial fit ------------------------------------------------------
     print("Fitting initial model...")
     trace, summary = fit_dirichlet_regression(
-        X, select_probs, n_features, random_seed=random_seed
+        X, counts, week, n_features, random_seed=random_seed
     )
 
     # az.plot_trace(trace, combined=True)
@@ -324,7 +356,7 @@ def fit_position_pipeline(
 
     print("Refitting on pruned feature set...")
     trace_final, summary_final = fit_dirichlet_regression(
-        X_kept, select_probs, len(feats_kept), random_seed=random_seed
+        X_kept, counts, week, len(feats_kept), random_seed=random_seed
     )
 
     # # axes = az.plot_trace(trace_final, combined=True)
@@ -345,15 +377,5 @@ def fit_position_pipeline(
         "trace_final": trace_final,
         "summary_final": summary_final,
         "beta_mean": trace_final.posterior["beta"].mean(dim=("chain", "draw")).values,
+        "intercept_mean": float(trace_final.posterior["intercept"].mean()),
     }
-
-
-def alpha_league(fit_result, X_new_raw):
-    """
-    Apply a fitted position model (dict returned by fit_position_pipeline) to
-    new-week raw features, standardizing with the model's *training*
-    mean/std, per eq:alpha_league.
-    """
-    X_std_new = (X_new_raw - fit_result["X_mean"]) / fit_result["X_std"]
-    linear = np.clip(X_std_new @ fit_result["beta_mean"], -30, 30)
-    return np.exp(linear)

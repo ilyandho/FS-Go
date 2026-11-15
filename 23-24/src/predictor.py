@@ -1,10 +1,10 @@
-"""Predict every player's xP for gameweeks 21 to 38 with the model selected for each gameweek.
+"""Predict every player's xP for gameweeks 5 to 38 with the model selected for each gameweek.
 
 At each selection point s (config.VALID_FOLDS), the model with the lowest validation MAE at s is
-selected (compare.selections) and used for the next config.HORIZON gameweeks (deploy.windows).
-Gameweek 21 comes before the first window, so it is predicted by the model selected at 21. That
-model was trained on gameweeks 1 to 20, but its gameweek 21 predictions were also used to select it,
-so those rows are flagged with in_selection = True.
+selected (compare.selections) and used up to and including the next selection point
+(deploy.windows). The first selection point (5) comes before the first window, so it is predicted by
+its own selected model. That model was trained on gameweeks 1 to 4, but its gameweek 5 predictions
+were also used to select it, so those rows are flagged with in_selection = True.
 
 Every player with a fixture is predicted (config.ALL_PLAYERS_DATA_XP_FIXED), also those who then did
 not play, with the same features the models were trained on.

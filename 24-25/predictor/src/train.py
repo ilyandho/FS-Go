@@ -24,7 +24,7 @@ def run(fold, model, pos):
     df = data.load(pos)  # without the gameweeks that have no target
 
     # Time-based split: train on every gameweek before the fold, validate on the fold
-    df_train = df[df.kfold < fold].reset_index(drop=True)
+    df_train = data.training_rows(df[df.kfold < fold]).reset_index(drop=True)
     df_valid = df[df.kfold == fold].reset_index(drop=True)
 
     x_train = data.features(df_train)

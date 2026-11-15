@@ -1,10 +1,10 @@
 """Score every model on the gameweeks it would be used for after each selection point.
 
 At selection point s (config.VALID_FOLDS), each model was trained on the gameweeks before s and
-validated on s by train.py or ensemble.py. The selected model is then used unchanged for the next
-config.HORIZON gameweeks, up to the last gameweek in the data. This script loads every model saved
-at s and predicts each of those gameweeks, so compare.py can score both fixed models and the
-selection procedure.
+validated on s by train.py or ensemble.py. The selected model is then used unchanged up to and
+including the next selection point, or for config.HORIZON gameweeks after the last one (windows).
+This script loads every model saved at s and predicts each of those gameweeks, so compare.py can
+score both fixed models and the selection procedure.
 
 The gameweeks in config.MISSING_TARGET_GWS have no target, so data.load leaves them out and they
 are not scored.
@@ -31,11 +31,12 @@ OUTPUT = f"{config.MODEL_OUTPUT}deploy_results.csv"
 
 
 def windows(last_gw):
-    """Selection point -> the gameweeks its selected model is used for."""
-    return {
-        s: list(range(s + 1, min(s + config.HORIZON, last_gw) + 1))
-        for s in config.VALID_FOLDS
-    }
+    """Selection point -> the gameweeks its selected model is used for: up to and including the
+    next selection point (whose own model is selected on it), and HORIZON gameweeks after the last
+    one. Every gameweek after the first selection point is covered, however far apart they are."""
+    folds = sorted(config.VALID_FOLDS)
+    ends = folds[1:] + [folds[-1] + config.HORIZON]
+    return {s: list(range(s + 1, min(end, last_gw) + 1)) for s, end in zip(folds, ends)}
 
 
 def run(pos, results):
