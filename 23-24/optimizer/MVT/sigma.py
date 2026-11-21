@@ -11,7 +11,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-MIN_HISTORY = 3  # gameweeks of errors a player needs for his own variance / standardisation
+MIN_HISTORY = (
+    3  # gameweeks of errors a player needs for his own variance / standardisation
+)
 POS_ORDER = ["GK", "DEF", "MID", "FWD"]
 
 _SRC = Path(__file__).resolve().parents[2] / "inputs/sources/vaastav_23-24"
@@ -59,8 +61,10 @@ def correlation_table(hist):
     opp = opp[opp["fpl_id_i"] < opp["fpl_id_j"]].assign(rel="opp")
     pairs = pd.concat([same, opp], ignore_index=True)
     pairs["pos_pair"] = [pos_pair(a, b) for a, b in zip(pairs["pos_i"], pairs["pos_j"])]
-    return (pairs["z_i"] * pairs["z_j"]).groupby([pairs["rel"], pairs["pos_pair"]]).agg(
-        rho="mean", n_pairs="size"
+    return (
+        (pairs["z_i"] * pairs["z_j"])
+        .groupby([pairs["rel"], pairs["pos_pair"]])
+        .agg(rho="mean", n_pairs="size")
     )
 
 

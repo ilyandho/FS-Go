@@ -1,6 +1,6 @@
 """Paths and fold settings shared by every script. Paths are relative to src/."""
 
-POSITIONS = ["GK", "DEF", "MID", "FWD"]
+POSITIONS = ["DEF"]  # ["GK", "DEF", "MID", "FWD"]
 
 # Season of the raw data: "23-24" (built by build_rolled_data.py) or "24-25" (downloaded).
 SEASON = "23-24"
@@ -11,7 +11,10 @@ SEASON = "23-24"
 # 5, makes gameweeks 6-38 all predicted out of sample. After the last point the model is used for
 # HORIZON gameweeks, cut short by the end of the season (36-38 for 2023-24).
 # 2023-24 has no target in gameweek 26, so its points are moved one gameweek earlier.
-VALID_FOLDS = {"23-24": [5, 10, 15, 20, 25, 30, 35], "24-25": [5, 10, 15, 21, 26, 31, 36]}[SEASON]
+VALID_FOLDS = {
+    "23-24": [5, 10, 15, 20, 25, 30, 35],
+    "24-25": [5, 10, 15, 21, 26, 31, 36],
+}[SEASON]
 HORIZON = 5
 
 # Gameweeks with no target: the source data has xP = 0 for every player in them. They are left out of
@@ -33,4 +36,6 @@ RAW_DATA_XP_FIXED = f"../inputs/rolled_player_data_{SEASON}_xp_fixed.csv"
 # The same for every player with a fixture, also those who did not play (build_rolled_data.py). The
 # models train on RAW_DATA (players who played); predictor.py predicts these rows.
 ALL_PLAYERS_DATA = f"../inputs/rolled_player_data_{SEASON}_all_players.csv"
-ALL_PLAYERS_DATA_XP_FIXED = f"../inputs/rolled_player_data_{SEASON}_all_players_xp_fixed.csv"
+ALL_PLAYERS_DATA_XP_FIXED = (
+    f"../inputs/rolled_player_data_{SEASON}_all_players_xp_fixed.csv"
+)
