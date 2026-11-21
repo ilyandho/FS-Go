@@ -11,7 +11,11 @@ DEFAULT_SEASON = "23-24"
 
 # missing_target_gws: gameweeks with no target (total_points = 0 for every player); left out of training and
 # of every score, still predicted.
+# history_from_gw: first gameweek usable when the season is training history for a later one (default 1).
+#   2022-23: FPL only published xG, xA and xGC from GW16, and the team form features look back 10 matches, so its
+#   features and expected-stat targets are complete from GW26. 2022-23 has no GW7 (postponed after the Queen's death).
 SEASONS = {
+    "22-23": {"missing_target_gws": [], "history_from_gw": 26},
     "23-24": {"missing_target_gws": []},
     "24-25": {"missing_target_gws": []},
 }
@@ -33,6 +37,7 @@ def paths(season):
         season_dir=f"20{yy}-{zz}",  # vaastav's folder name, e.g. 2023-24
         start_year=2000 + int(yy),
         missing_target_gws=SEASONS[season]["missing_target_gws"],
+        history_from_gw=SEASONS[season].get("history_from_gw", 1),
         # build_data.py
         vaastav_cache=f"{SOURCES}/vaastav_{season}",  # merged_gw.csv, fixtures.csv, teams.csv, understat/, ...
         players=f"{DATA}/{season}/players.csv",  # every player with a fixture, with lagged features

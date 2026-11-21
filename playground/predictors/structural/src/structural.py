@@ -344,6 +344,7 @@ def walk_forward(positions=config.POSITIONS, gws=range(FIRST_GW, LAST_GW + 1), t
     data: the output of load(season), to avoid reloading it (its season wins over `season`).
     history: earlier seasons (e.g. ["23-24"]) whose every gameweek is added to the training data of each gameweek.
       Each history season is either a season name, loaded with load(), or a (players, fx) pair from load().
+      Only its gameweeks from config.SEASONS[season]["history_from_gw"] on are used.
       In 2024-25, adding 2023-24 cut RMSE from 1.877 to 1.871 (most of it in GW5-10) and makes GW1-4 predictable.
     """
     players, fx = data if data is not None else load(season)
@@ -352,11 +353,13 @@ def walk_forward(positions=config.POSITIONS, gws=range(FIRST_GW, LAST_GW + 1), t
     hist_p, hist_fx, names = [], [], []
     for h in history:
         hp, hf = load(h) if isinstance(h, str) else h
-        if hp.season.iloc[0] == current:
+        name = hp.season.iloc[0]
+        if name == current:
             raise ValueError(f"history season {current} is the season being predicted")
-        names.append(hp.season.iloc[0])
-        hist_p.append(hp[hp.has_target])
-        hist_fx.append(hf[hf.has_target])
+        first = config.paths(name).history_from_gw  # e.g. 2022-23 from GW26: FPL xG starts at GW16
+        names.append(name)
+        hist_p.append(hp[hp.has_target & (hp["round"] >= first)])
+        hist_fx.append(hf[hf.has_target & (hf["round"] >= first)])
     out = []
     for gw in gws:
         train_all = pd.concat(hist_p + [players[players.has_target & (players["round"] < gw)]], ignore_index=True)

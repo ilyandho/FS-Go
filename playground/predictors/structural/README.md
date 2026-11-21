@@ -2,8 +2,9 @@
 
 Predicts each FPL player's points for every gameweek by predicting each scoring component (minutes, team goals
 conceded, goals, assists, bonus, saves, cards) and combining them with the FPL scoring rules. Every model for
-gameweek *gw* is fitted on gameweeks before *gw* only. Works for 2023-24 and 2024-25 (`config.SEASONS`); the
-scoring rules are the same in both and reproduce `total_points` exactly for every position.
+gameweek *gw* is fitted on gameweeks before *gw* only. Works for 2023-24 and 2024-25 (`config.SEASONS`), with
+2022-23 built as training history for 2023-24; the scoring rules are the same in all three and reproduce
+`total_points` exactly for every position.
 
 ## Layout
 
@@ -39,6 +40,7 @@ Python 3.11 with the packages in `23-24/requirements.txt`. Scripts run from `src
 
 ```
 cd src
+python build_data.py --season 22-23           # history for 2023-24 (same for build_availability.py)
 python build_data.py --season 24-25           # downloads once (about a minute), then uses data/sources/
 python build_availability.py --season 24-25   # needs build_data.py's fixtures.csv; downloads ~35 snapshots once
 python structural.py --season 24-25           # all positions, GW 5-38 -> ../outputs/24-25/structural_predictions.csv
@@ -55,19 +57,32 @@ free-kick taker).
 
 ### Training on earlier seasons too
 
-`--history 23-24` (`walk_forward(..., history=["23-24"])`, `HISTORY` in the notebook) adds every gameweek of the
-listed seasons to the training data of each gameweek. Predictions then start at GW1 (there is history before it) and
-are written to `structural_predictions_history_23-24.csv`, next to the single-season file. For 2024-25:
+`--history` (`walk_forward(..., history=[...])`, `HISTORY` in the notebook) adds the listed seasons to the training
+data of each gameweek. Predictions then start at GW1 (there is history before it) and are written to
+`structural_predictions_history_{seasons}.csv`, next to the single-season file. Each season is trained on the one
+before it:
 
-| 2024-25, GW5-38 | 24-25 only | with 23-24 |
+```
+python structural.py --season 23-24 --history 22-23
+python structural.py --season 24-25 --history 23-24
+```
+
+| GW5-38, RMSE / R² / Spearman | season only | with the previous season |
 |---|---|---|
-| Every player: RMSE / R² / Spearman | 1.877 / 0.337 / 0.732 | 1.871 / 0.341 / 0.735 |
-| Players who played: RMSE / R² / Spearman | 2.740 / 0.108 / 0.395 | 2.733 / 0.112 / 0.401 |
-| GW1-4, every player: RMSE / R² / Spearman | not possible | 1.984 / 0.288 / 0.704 |
+| 2023-24, every player | 1.854 / 0.341 / 0.721 | 1.847 / 0.346 / 0.724 |
+| 2023-24, players who played | 2.850 / 0.109 / 0.404 | 2.840 / 0.115 / 0.410 |
+| 2024-25, every player | 1.877 / 0.337 / 0.732 | 1.871 / 0.341 / 0.735 |
+| 2024-25, players who played | 2.740 / 0.108 / 0.395 | 2.733 / 0.112 / 0.401 |
+| GW1-4, every player (only possible with history) | 2023-24: 2.166 / 0.170 / 0.628 | 2024-25: 1.984 / 0.288 / 0.704 |
 
-Most of the gain is early in the season (GW5-10 RMSE 1.896 to 1.876) and for midfielders and forwards; the last 10
-gameweeks of 2023-24 give nearly all of it. 2023-24 has no earlier season here, so to give both seasons the same
-treatment, add "22-23" to `config.SEASONS` and build its data.
+Most of the gain is early in the season (GW5-10 RMSE 1.867 to 1.848 in 2023-24, 1.896 to 1.876 in 2024-25), and it
+holds for every position; the last 10 gameweeks of the previous season give nearly all of it.
+
+2022-23 is history only. FPL published xG, xA and xGC only from its GW16, so before that the expected-stat targets and
+features are zero; `config.SEASONS["22-23"]["history_from_gw"] = 26` uses it from GW26, once the 10-match team form
+features are complete too. Using all of 2022-23 instead gave 23-24 less (every player RMSE 1.851) and lowered the
+Spearman for players who played (0.396). 2022-23 has no GW7 (postponed after the Queen's death) and its GW17 snapshot
+is 33 days old (the World Cup break).
 
 From Python:
 
